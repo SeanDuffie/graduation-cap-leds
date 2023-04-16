@@ -2,10 +2,11 @@
 """
 import cv2
 import os
+from tkinter import filedialog
 
 class Pixel_Factory:
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self):
+        self.filename = filedialog.askopenfilename()
 
         self.img = cv2.imread(self.filename, cv2.IMREAD_COLOR)
 
@@ -18,7 +19,7 @@ class Pixel_Factory:
         scaled_img = cv2.resize(self.img, [x,y])
 
         out_path = f"./outputs/{x}-{y}/"
-        out_name = f"{self.filename}.png"
+        out_name = f"{os.path.basename(self.filename)}"
 
         if not os.path.exists(out_path):
             os.mkdir(out_path)
@@ -28,4 +29,4 @@ class Pixel_Factory:
 
 
 if __name__ == "__main__":
-    pix = Pixel_Factory('noot-noot.png')
+    pix = Pixel_Factory()
