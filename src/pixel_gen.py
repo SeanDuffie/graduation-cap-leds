@@ -1,13 +1,24 @@
 """ pixel_gen.py
 """
-import cv2
+import csv
 import os
-from tkinter import filedialog
 import sys
+from tkinter import filedialog
+
+import cv2
 
 BATCH = True
 
-class Pixel_Factory:
+class PixelFactory:
+    """ Pixel factory is a Python script used to make images usable by arduino LEDs
+
+    This program will allow the user to select a directory, which will then be parsed for images
+    to convert. These images will be downscaled to various sizes of pixel arrays, then will be
+    converted into hexadecimal pixel arrays, which can be copy/pasted into an arduino scripts
+    easily.
+
+    TODO: Figure out how to auto crop images to squares to prevent stretching
+    """
     def __init__(self):
         img_arr = []
         if BATCH:
@@ -38,7 +49,16 @@ class Pixel_Factory:
             self.generate_resize(32,32,img)
             self.generate_resize(64,64,img)
 
-    def generate_resize(self, x, y, img):
+    def generate_resize(self, x: int, y: int, img):
+        """ Resizes the input image to the input dimensions, then produces a csv of hex colors
+
+        Args:
+            - x (int): output image width
+            - y (int): output image height
+            - img (np.array): Original imput array of pixels
+        Returns:
+            - None
+        """
         scaled_img = cv2.resize(img[1], [x,y])
 
         out_path = f"./outputs/{x}-{y}/"
@@ -49,8 +69,36 @@ class Pixel_Factory:
             os.mkdir(out_path)
 
         cv2.imwrite(out_path + out_name + ".png", scaled_img)
-        cv2.imshow(out_name, scaled_img)
+
+        # Generate Pixel CSV
+        with open(out_path + out_name + ".csv", 'w', newline='', encoding="utf-8") as csvfile:
+            wrtr = csv.writer(csvfile, delimiter=',')
+            r, c, z = scaled_img.shape
+            for i in range(r):
+                current_row = []
+                for j in range(c):
+                    current_row.append(self.bgr_to_hex(scaled_img[i, j]))
+                wrtr.writerow(current_row[:len(current_row)-1])
+
+    def bgr_to_hex(self, pixel):
+        """ Converts a single BGR pixel to a hexadecimal value
+
+        Args:
+            - pixel (np.array): Contains 3 elements for blue, green, and red values
+        Returns:
+            - hex_val (str): hexadecimal color from rgb values
+        """
+
+        # Extracts the colors from the pixel, change the order to switch from BGR to RGB
+        r: int = pixel[2]
+        g: int = pixel[1]
+        b: int = pixel[0]
+
+        hex_val: str = f'#{r:02x}{g:02x}{b:02x}'
+
+        return hex_val
+
 
 
 if __name__ == "__main__":
-    pix = Pixel_Factory()
+    pix = PixelFactory()
