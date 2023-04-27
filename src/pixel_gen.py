@@ -20,7 +20,9 @@ class PixelFactory:
     TODO: Figure out how to auto crop images to squares to prevent stretching
     """
     def __init__(self):
+        # Image array is used to store the input images
         img_arr = []
+
         if BATCH:
             folder = filedialog.askdirectory()
 
@@ -37,12 +39,12 @@ class PixelFactory:
             img = cv2.imread(file, cv2.IMREAD_COLOR)
             img_arr.append([file, img])
 
+        # Error Handling for cancelling file select
         if len(img) == 0:
             print("No file selected or directory")
             sys.exit(1)
 
-        # self.filename = filedialog.askopenfilename()
-
+        # Generate Resizes
         for img in img_arr:
             self.generate_resize(16,16,img)
             self.generate_resize(22,22,img)
@@ -94,7 +96,8 @@ class PixelFactory:
         g: int = pixel[1]
         b: int = pixel[0]
 
-        hex_val: str = f'#{r:02x}{g:02x}{b:02x}'
+        hex_val: str = f'0x{r:02x}{g:02x}{b:02x}'
+        print(f"({r},{g},{b}) | ({hex(r):2},{hex(g):2},{hex(b):2}) | {hex_val}")
 
         return hex_val
 
