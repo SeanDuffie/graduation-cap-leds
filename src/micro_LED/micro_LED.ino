@@ -1,46 +1,254 @@
+/**
+ * Project      graduation-cap-leds
+ * @file        micro_LED.ino
+ * @author      Sean Duffie
+ * @link        https://github.com/SeanDuffie/graduation-cap-leds
+ * 
+ * The purpose of this project is to create a 
+ */
+
 #include "FastLED.h"
+// #include <FastLED_NeoPixel.h>
 
-// Params for width and height
-const uint8_t kMatrixWidth = 22;
-const uint8_t kMatrixHeight = 22;
-
-#define NUM_LEDS (kMatrixWidth * kMatrixHeight)
-#define LAST_VISIBLE_LED NUM_LEDS-1
+// Which pin on the Arduino is connected to the LEDs?
 #define DATA_PIN 3
+#define COLOR_ORDER GRB
+#define CHIPSET     WS2812B
 
-CRGB leds[ NUM_LEDS ];
-uint16_t XY (uint16_t x, uint16_t y) {
-  // any out of bounds address maps to the first hidden pixel
-  if ( (x >= kMatrixWidth) || (y >= kMatrixHeight) ) {
-    return (LAST_VISIBLE_LED + 1);
+// LED brightness, 0 (min) to 255 (max)
+#define BRIGHTNESS 100
+
+// Amount of time for each half-blink, in milliseconds
+#define BLINK_TIME 100
+
+// How many LEDs are attached to the Arduino?
+const uint8_t WIDTH = 16;
+const uint8_t LENGTH = 16;
+#define NUM_LEDS (WIDTH * LENGTH)
+// const uint8_t LAST_VISIBLE_LED = NUM_LEDS-1;
+
+// Param for different pixel layouts
+const bool    kMatrixSerpentineLayout = true;
+const bool    kMatrixVertical = false;
+
+/* Declare the NeoPixel strip object:
+*     * Argument 1 = Number of LEDs in the LED strip
+*     * Argument 2 = Arduino pin number
+*     * Argument 3 = LED strip color order
+* 
+* The FastLED_NeoPixel version uses template arguments instead of function
+* arguments. Note the use of '<>' brackets!
+* 
+* You can switch between libraries by commenting out one of these two objects.
+* In this example they should behave identically.
+*/
+// Adafruit_NeoPixel strip(NUM_LEDS, DATA_PIN, NEO_GRB);  // <- Adafruit NeoPixel version
+// FastLED_NeoPixel<NUM_LEDS, DATA_PIN, NEO_GRB> strip;      // <- FastLED NeoPixel version
+
+CRGB leds_plus_safety_pixel[ NUM_LEDS + 1];
+CRGB* const leds( leds_plus_safety_pixel + 1);
+
+/** Helper functions for an two-dimensional XY matrix of pixels.
+    Simple 2-D demo code is included as well.
+
+        XY(x,y) takes x and y coordinates and returns an LED index number,
+                for use like this:  leds[ XY(x,y) ] == CRGB::Red;
+                No error checking is performed on the ranges of x and y.
+
+        XYsafe(x,y) takes x and y coordinates and returns an LED index number,
+                for use like this:  leds[ XYsafe(x,y) ] == CRGB::Red;
+                Error checking IS performed on the ranges of x and y, and an
+                index of "-1" is returned.  Special instructions below
+                explain how to use this without having to do your own error
+                checking every time you use this function.  
+                This is a slightly more advanced technique, and 
+                it REQUIRES SPECIAL ADDITIONAL setup, described below.
+ */
+
+/** Set 'kMatrixSerpentineLayout' to false if your pixels are 
+    laid out all running the same way, like this:
+
+    0 >  1 >  2 >  3 >  4
+                        |
+    .----<----<----<----'
+    |
+    5 >  6 >  7 >  8 >  9
+                        |
+    .----<----<----<----'
+    |
+    10 > 11 > 12 > 13 > 14
+                        |
+    .----<----<----<----'
+    |
+    15 > 16 > 17 > 18 > 19
+
+    Set 'kMatrixSerpentineLayout' to true if your pixels are 
+    laid out back-and-forth, like this:
+
+    0 >  1 >  2 >  3 >  4
+                        |
+                        |
+    9 <  8 <  7 <  6 <  5
+    |
+    |
+    10 > 11 > 12 > 13 > 14
+                        |
+                        |
+    19 < 18 < 17 < 16 < 15
+
+    Bonus vocabulary word: anything that goes one way 
+    in one row, and then backwards in the next row, and so on
+    is call "boustrophedon", meaning "as the ox plows."
+
+
+    This function will return the right 'led index number' for 
+    a given set of X and Y coordinates on your matrix.  
+    IT DOES NOT CHECK THE COORDINATE BOUNDARIES.  
+    That's up to you.  Don't pass it bogus values.
+
+    Use the "XY" function like this:
+
+    for( uint8_t x = 0; x < kMatrixWidth; x++) {
+        for( uint8_t y = 0; y < kMatrixHeight; y++) {
+        
+        // Here's the x, y to 'led index' in action: 
+        leds[ XY( x, y) ] = CHSV( random8(), 255, 255);
+        
+        }
+    }
+ */
+uint16_t XY( uint8_t x, uint8_t y)
+{
+  uint16_t i;
+  
+  if( kMatrixSerpentineLayout == false) {
+    if (kMatrixVertical == false) {
+      i = (y * WIDTH) + x;
+    } else {
+      i = LENGTH * (WIDTH - (x+1))+y;
+    }
   }
 
-  const uint16_t XYTable[] = {
-     0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,  15,  16,  17,  18,  19,  20,  21,
-    43,  42,  41,  40,  39,  38,  37,  36,  35,  34,  33,  32,  31,  30,  29,  28,  27,  26,  25,  24,  23,  22,
-    44,  45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,  65,
-    87,  86,  85,  84,  83,  82,  81,  80,  79,  78,  77,  76,  75,  74,  73,  72,  71,  70,  69,  68,  67,  66,
-    88,  89,  90,  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
-   131, 130, 129, 128, 127, 126, 125, 124, 123, 122, 121, 120, 119, 118, 117, 116, 115, 114, 113, 112, 111, 110,
-   132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153,
-   175, 174, 173, 172, 171, 170, 169, 168, 167, 166, 165, 164, 163, 162, 161, 160, 159, 158, 157, 156, 155, 154,
-   176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197,
-   219, 218, 217, 216, 215, 214, 213, 212, 211, 210, 209, 208, 207, 206, 205, 204, 203, 202, 201, 200, 199, 198,
-   220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241,
-   263, 262, 261, 260, 259, 258, 257, 256, 255, 254, 253, 252, 251, 250, 249, 248, 247, 246, 245, 244, 243, 242,
-   264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285,
-   307, 306, 305, 304, 303, 302, 301, 300, 299, 298, 297, 296, 295, 294, 293, 292, 291, 290, 289, 288, 287, 286,
-   308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329,
-   351, 350, 349, 348, 347, 346, 345, 344, 343, 342, 341, 340, 339, 338, 337, 336, 335, 334, 333, 332, 331, 330,
-   352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373,
-   395, 394, 393, 392, 391, 390, 389, 388, 387, 386, 385, 384, 383, 382, 381, 380, 379, 378, 377, 376, 375, 374,
-   396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417,
-   439, 438, 437, 436, 435, 434, 433, 432, 431, 430, 429, 428, 427, 426, 425, 424, 423, 422, 421, 420, 419, 418,
-   440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461,
-   483, 482, 481, 480, 479, 478, 477, 476, 475, 474, 473, 472, 471, 470, 469, 468, 467, 466, 465, 464, 463, 462
-  };
+  if( kMatrixSerpentineLayout == true) {
+    if (kMatrixVertical == false) {
+      if( y & 0x01) {
+        // Odd rows run backwards
+        uint8_t reverseX = (WIDTH - 1) - x;
+        i = (y * WIDTH) + reverseX;
+      } else {
+        // Even rows run forwards
+        i = (y * WIDTH) + x;
+      }
+    } else { // vertical positioning
+      if ( x & 0x01) {
+        i = LENGTH * (WIDTH - (x+1))+y;
+      } else {
+        i = LENGTH * (WIDTH - x) - (y+1);
+      }
+    }
+  }
+  
+  return i;
+}
 
-  uint16_t i = (y * kMatrixWidth) + x;
-  uint16_t j = XYTable[i];
-  return j;
+/** Once you've gotten the basics working (AND NOT UNTIL THEN!)
+    here's a helpful technique that can be tricky to set up, but 
+    then helps you avoid the needs for sprinkling array-bound-checking
+    throughout your code.
+
+    It requires a careful attention to get it set up correctly, but
+    can potentially make your code smaller and faster.
+
+    Suppose you have an 8 x 5 matrix of 40 LEDs.  Normally, you'd
+    delcare your leds array like this:
+    CRGB leds[40];
+    But instead of that, declare an LED buffer with one extra pixel in
+    it, "leds_plus_safety_pixel".  Then declare "leds" as a pointer to
+    that array, but starting with the 2nd element (id=1) of that array: 
+    CRGB leds_with_safety_pixel[41];
+    CRGB* const leds( leds_plus_safety_pixel + 1);
+    Then you use the "leds" array as you normally would.
+    Now "leds[0..N]" are aliases for "leds_plus_safety_pixel[1..(N+1)]",
+    AND leds[-1] is now a legitimate and safe alias for leds_plus_safety_pixel[0].
+    leds_plus_safety_pixel[0] aka leds[-1] is now your "safety pixel".
+
+    Now instead of using the XY function above, use the one below, "XYsafe".
+
+    If the X and Y values are 'in bounds', this function will return an index
+    into the visible led array, same as "XY" does.
+    HOWEVER -- and this is the trick -- if the X or Y values
+    are out of bounds, this function will return an index of -1.
+    And since leds[-1] is actually just an alias for leds_plus_safety_pixel[0],
+    it's a totally safe and legal place to access.  And since the 'safety pixel'
+    falls 'outside' the visible part of the LED array, anything you write 
+    there is hidden from view automatically.
+    Thus, this line of code is totally safe, regardless of the actual size of
+    your matrix:
+    leds[ XYsafe( random8(), random8() ) ] = CHSV( random8(), 255, 255);
+
+    The only catch here is that while this makes it safe to read from and
+    write to 'any pixel', there's really only ONE 'safety pixel'.  No matter
+    what out-of-bounds coordinates you write to, you'll really be writing to
+    that one safety pixel.  And if you try to READ from the safety pixel,
+    you'll read whatever was written there last, reglardless of what coordinates
+    were supplied.
+ */
+uint16_t XYsafe( uint8_t x, uint8_t y)
+{
+  if( x >= WIDTH) return -1;
+  if( y >= LENGTH) return -1;
+  return XY(x,y);
+}
+
+int c = 0;
+
+void setup() {
+    // XY Matrix
+    FastLED.addLeds<CHIPSET, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
+    FastLED.setBrightness( BRIGHTNESS );
+    
+    // FastLED strip
+    // strip.begin();  // initialize strip (required!)
+    // strip.setBrightness(BRIGHTNESS);
+    // strip.show();
+}
+
+void loop() {
+    // XY Matrix
+    uint32_t ms = millis();
+    int32_t yHueDelta32 = ((int32_t)cos16( ms * (27/1) ) * (350 / WIDTH));
+    int32_t xHueDelta32 = ((int32_t)cos16( ms * (39/1) ) * (310 / LENGTH));
+    DrawOneFrame( ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
+    if( ms < 5000 ) {
+      FastLED.setBrightness( scale8( BRIGHTNESS, (ms * 256) / 5000));
+    } else {
+      FastLED.setBrightness(BRIGHTNESS);
+    }
+    FastLED.show();
+
+    // Blink
+    // if (c > LAST_VISIBLE_LED) { c = 0; }
+    // for (int i=0; i < NUM_LEDS; i++) {
+    //     if (i >= c) {
+    //         strip.setPixelColor(i, strip.Color(0, 0, 255)); // Set pixel blue
+    //     } else {
+    //         strip.setPixelColor(i, strip.Color(255, 0, 0)); // Turn off pixel
+    //     }
+    // }
+    // strip.show();
+    // delay(BLINK_TIME);
+    // c++;
+}
+
+void DrawOneFrame( uint8_t startHue8, int8_t yHueDelta8, int8_t xHueDelta8)
+{
+  uint8_t lineStartHue = startHue8;
+  for( uint8_t y = 0; y < LENGTH; y++) {
+    lineStartHue += yHueDelta8;
+    uint8_t pixelHue = lineStartHue;      
+    for( uint8_t x = 0; x < WIDTH; x++) {
+      pixelHue += xHueDelta8;
+      leds[ XY(x, y)]  = CHSV( pixelHue, 255, 32);
+    }
+  }
 }
