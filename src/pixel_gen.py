@@ -74,13 +74,14 @@ class PixelFactory:
 
         # Generate Pixel CSV
         with open(out_path + out_name + ".csv", 'w', newline='', encoding="utf-8") as csvfile:
-            wrtr = csv.writer(csvfile, delimiter=',')
+            csv.register_dialect("dil", delimiter=",", lineterminator=",\r\n")
+            wrtr = csv.writer(csvfile, dialect="dil", delimiter=',')
             r, c, z = scaled_img.shape
             for i in range(r):
                 current_row = []
                 for j in range(c):
                     current_row.append(self.bgr_to_hex(scaled_img[i, j]))
-                wrtr.writerow(current_row[:len(current_row)-1])
+                wrtr.writerow(current_row[:len(current_row)])
 
     def bgr_to_hex(self, pixel):
         """ Converts a single BGR pixel to a hexadecimal value
@@ -97,7 +98,6 @@ class PixelFactory:
         b: int = pixel[0]
 
         hex_val: str = f'0x{r:02x}{g:02x}{b:02x}'
-        print(f"({r},{g},{b}) | ({hex(r):2},{hex(g):2},{hex(b):2}) | {hex_val}")
 
         return hex_val
 
