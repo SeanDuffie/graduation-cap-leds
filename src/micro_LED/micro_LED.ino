@@ -10,7 +10,11 @@
 #include "FastLED.h"
 
 // Which pin on the Arduino is connected to the LEDs?
-#define DATA_PIN 3
+#define BUTTON1 2
+#define BUTTON2 3
+#define BUTTON3 4
+#define BUTTON4 5
+#define DATA_PIN 6 
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812B
 
@@ -18,7 +22,7 @@
 #define BRIGHTNESS 50
 
 // Amount of time for each half-blink, in milliseconds
-#define BLINK_TIME 200
+#define BLINK_TIME 25
 uint8_t MULTIPLIER = 5;
 
 // How many LEDs are attached to the Arduino?
@@ -468,29 +472,53 @@ const long uncanny[] = {MRI1, MRI2};
 long meme_arr[] = {Loss, Noot, Arthur, Doge};
 
 void setup() {
-//    Serial.begin(115200);
+    Serial.begin(115200);
     // XY Matrix
     FastLED.addLeds<CHIPSET, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
     FastLED.setBrightness(BRIGHTNESS);
     FastLED.clear();
 
+    pinMode(BUTTON1, INPUT);
+    pinMode(BUTTON2, INPUT);
+    pinMode(BUTTON3, INPUT);
+    pinMode(BUTTON4, INPUT);
+
     StartFlash();
 }
 
 void loop() {
-//  for (int c = 0; c < num_img; c++) { DrawOneFrame(npc[c]); }
-
-//  for (int c = 0; c < num_img; c++) { DrawOneFrame(pop_cat[c]); }
+//    for (int c = 0; c < num_img; c++) { DrawOneFrame(npc[c]); }
   
-//  for (int c = 0; c < num_img; c++) { DrawOneFrame(uncanny[c]); }
+    for (int c = 0; c < num_img; c++) {DrawOneFrame(pop_cat[c]);
+        /** TODO: Add button controls */
+//        Serial.println(MULTIPLIER);
+        for (int c=0; c < MULTIPLIER; c+=10) {
+    //    Speed up flashing
+          if (digitalRead(BUTTON1)) {
+            if (MULTIPLIER > 1) {
+              MULTIPLIER -= 1;
+              Serial.print(MULTIPLIER);
+              Serial.println(" Decrease Delay...");
+            }
+          }
+    //    Slow down flashing
+          if (digitalRead(BUTTON2)) {
+            if (MULTIPLIER < 255) {
+              MULTIPLIER += 1;
+            }
+              Serial.print(MULTIPLIER);
+            Serial.println(" Increase Delay...");
+          }
+    //    Pause/play Flashing
+    //    Toggle Mode
+          delay(BLINK_TIME);
+        }
+    }
 
-  for (int c = 0; c < 4; c++) { DrawOneFrame(meme_arr[c]); }
+//    for (int c = 0; c < num_img; c++) { DrawOneFrame(uncanny[c]); }
 
-/** TODO: Add button controls */
-// Speed up flashing
-// Slow down flashing
-// Pause/play Flashing
-// Toggle Mode
+//    for (int c = 0; c < 4; c++) { DrawOneFrame(meme_arr[c]); }
+
 }
 
 void StartFlash() {
@@ -498,19 +526,19 @@ void StartFlash() {
         leds[i] = 0xff0000;
     }
     FastLED.show();
-    delay(BLINK_TIME);
+    delay(BLINK_TIME*20);
 
     for (int i=0; i<NUM_LEDS; i++) {
         leds[i] = 0x00ff00;
     }
     FastLED.show();
-    delay(BLINK_TIME);
+    delay(BLINK_TIME*20);
 
     for (int i=0; i<NUM_LEDS; i++) {
         leds[i] = 0x0000ff;
     }
     FastLED.show();
-    delay(BLINK_TIME);
+    delay(BLINK_TIME*20);
 
     for (int i=0; i<NUM_LEDS; i++) {
         leds[i] = 0x000000;
@@ -526,5 +554,4 @@ void DrawOneFrame(const long pixel_arr[])
         }
     }
     FastLED.show();
-    delay(BLINK_TIME*MULTIPLIER);
 }
