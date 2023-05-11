@@ -464,61 +464,131 @@ const long MRI2[] PROGMEM =
 0x080808,0x090909,0x0d0d0d,0x848484,0x141414,0x090909,0x0a0a0a,0x090909,0x0a0a0a,0x090909,0x090909,0x080808,0x080808,0x0b0b0b,0x080808,0x090909,0x090909,0x0a0a0a,0x0a0a0a,0x040404,0x323232,0x282828
 };
 
-int num_img = 2;
-long npc[] = {NPC1, NPC2};
+const long npc[] = {NPC1, NPC2};
 const long pop_cat[] = {Pop1, Pop2};
 const long uncanny[] = {MRI1, MRI2};
 // const long pingu[] = {Noot};
-long meme_arr[] = {Loss, Noot, Arthur, Doge};
+const long meme_arr[] = {Loss, Noot, Arthur, Doge};
+
+int num_sets = 4;
+int num_img[] = {2, 2, 2, 4};
+int state = 0;
+
+bool Paused = false;
 
 void setup() {
+    /** Start Serial Terminal for debugging */
     Serial.begin(115200);
-    // XY Matrix
+    
+    /** Set up the LED Matrix */
     FastLED.addLeds<CHIPSET, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalSMD5050);
     FastLED.setBrightness(BRIGHTNESS);
     FastLED.clear();
 
+    /** Set up the button inputs */
     pinMode(BUTTON1, INPUT);
     pinMode(BUTTON2, INPUT);
     pinMode(BUTTON3, INPUT);
     pinMode(BUTTON4, INPUT);
 
+    /** Flash RGB to debug LEDs */
     StartFlash();
 }
 
 void loop() {
-//    for (int c = 0; c < num_img; c++) { DrawOneFrame(npc[c]); }
-  
-    for (int c = 0; c < num_img; c++) {DrawOneFrame(pop_cat[c]);
-        /** TODO: Add button controls */
-//        Serial.println(MULTIPLIER);
-        for (int c=0; c < MULTIPLIER; c+=10) {
-    //    Speed up flashing
-          if (digitalRead(BUTTON1)) {
-            if (MULTIPLIER > 1) {
-              MULTIPLIER -= 1;
-              Serial.print(MULTIPLIER);
-              Serial.println(" Decrease Delay...");
-            }
-          }
-    //    Slow down flashing
-          if (digitalRead(BUTTON2)) {
-            if (MULTIPLIER < 255) {
-              MULTIPLIER += 1;
-            }
-              Serial.print(MULTIPLIER);
-            Serial.println(" Increase Delay...");
-          }
-    //    Pause/play Flashing
-    //    Toggle Mode
-          delay(BLINK_TIME);
+    int c = 0;
+    
+    while (c < num_img[state]) {
+        /** Paused - a boolean that decided whether or not to move to the next frame */
+        Serial.print("Current Frame: ");
+        Serial.println(c);
+
+        /** Draw the current frame
+         *   
+         *  state - determines the image set
+         *  c - determines the frame in the current set 
+         */
+        switch(state) {
+            case 0:
+                DrawOneFrame(npc[c]);
+                break;
+            case 1:
+                DrawOneFrame(pop_cat[c]);
+                break;
+            case 2:
+                DrawOneFrame(uncanny[c]);
+                break;
+            case 3:
+                DrawOneFrame(meme_arr[c]);
+                break;
         }
+        
+        /** Split the delay into batches to reduce button lag */
+        for (int i=0; i < MULTIPLIER; i++) {
+            /** Button 1 is pressed
+             *  
+             *  If Not Paused, this will SPEED up the framerate
+             *  If Paused, this will move FORWARD one frame
+             */
+            if (digitalRead(BUTTON1)) {
+                if (Paused) {
+                    c++;
+                    delay(BLINK_TIME*10);
+                    break;
+                } else {
+                    if (MULTIPLIER > 1) {
+                        MULTIPLIER -= 1;
+                        Serial.print(" Decrease Delay -> ");
+                        Serial.println(MULTIPLIER);
+                    }
+                }
+            }
+            /** Button 2 is pressed
+             *  
+             *  If Not Paused, this will SLOW down the framerate
+             *  If Paused, this will move BACKWARD one frame
+             */
+            if (digitalRead(BUTTON2)) {
+                if (Paused) {
+                    if (c <= 0) {
+                        c = num_img[state]-1;
+                    } else {
+                        c--;
+                    }
+                    delay(BLINK_TIME*10);
+                    break;
+                } else {
+                    if (MULTIPLIER < 255) {
+                        MULTIPLIER += 1;
+                    }
+                    Serial.print("Increase Delay -> ");
+                    Serial.println(MULTIPLIER);
+                }
+            }
+            /** Toggle Pause/play if Button 3 is pressed */
+            if (digitalRead(BUTTON3)) {
+                Paused = !Paused;
+                Serial.print("Paused = ");
+                Serial.println(Paused);
+                delay(BLINK_TIME*10);
+            }
+            /** Cycle State if Button 4 is pressed */
+            if (digitalRead(BUTTON4)) {
+                if (state >= num_sets-1) {
+                    state = 0;
+                } else {
+                    state++;
+                }
+                Serial.print("New State: ");
+                Serial.println(state);
+                delay(BLINK_TIME*10);
+                break;
+            }
+            /** Delay only BLINK_TIME per MULTIPLIER cycle */
+            delay(BLINK_TIME);
+        }
+        if (!Paused) { c++; }
     }
-
-//    for (int c = 0; c < num_img; c++) { DrawOneFrame(uncanny[c]); }
-
-//    for (int c = 0; c < 4; c++) { DrawOneFrame(meme_arr[c]); }
-
 }
 
 void StartFlash() {
@@ -546,7 +616,7 @@ void StartFlash() {
     FastLED.show();
 }
 
-void DrawOneFrame(const long pixel_arr[])
+void DrawOneFrame(long pixel_arr[])
 {
     for(byte y=0; y<LENGTH; y++) {
         for(byte x=0; x<WIDTH; x++) {
