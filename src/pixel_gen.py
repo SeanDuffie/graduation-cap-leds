@@ -31,6 +31,23 @@ class PixelFactory:
                 sys.exit(1)
 
             for file in os.listdir(folder):
+                if file.endswith(".mp4") or file.endswith(".gif"):
+                    cap = cv2.VideoCapture(folder + "/" + file)
+
+                    # Check if camera opened successfully
+                    if cap.isOpened() is False:
+                        print("Error opening video stream or file")
+
+                    # Read until video is completed
+                    i = 0
+                    while cap.isOpened():
+                        ret, frame = cap.read()     # Capture frame-by-frame
+                        if ret is True:
+                            print(f"Appending: {folder}/{file[:len(file)-4]}{i}.gif")
+                            img_arr.append([f"{file[:len(file)-4]}{i}.gif", frame])
+                            i += 1
+                        else:
+                            break
                 print(f"Appending: {folder}/{file}")
                 img = cv2.imread(folder + "/" + file, cv2.IMREAD_COLOR)
                 img_arr.append([file, img])
