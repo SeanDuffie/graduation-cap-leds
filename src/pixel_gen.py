@@ -48,9 +48,10 @@ class PixelFactory:
                             i += 1
                         else:
                             break
-                print(f"Appending: {folder}/{file}")
-                img = cv2.imread(folder + "/" + file, cv2.IMREAD_COLOR)
-                img_arr.append([file, img])
+                else:
+                    print(f"Appending: {folder}/{file}")
+                    img = cv2.imread(folder + "/" + file, cv2.IMREAD_COLOR)
+                    img_arr.append([file, img])
         else:
             file = filedialog.askopenfilename()
             img = cv2.imread(file, cv2.IMREAD_COLOR)
@@ -63,10 +64,10 @@ class PixelFactory:
 
         # Generate Resizes
         for img in img_arr:
-            self.generate_resize(16,16,img)
+            # self.generate_resize(16,16,img)
             self.generate_resize(22,22,img)
-            self.generate_resize(32,32,img)
-            self.generate_resize(64,64,img)
+            # self.generate_resize(32,32,img)
+            # self.generate_resize(64,64,img)
 
     def generate_resize(self, x: int, y: int, img):
         """ Resizes the input image to the input dimensions, then produces a csv of hex colors
@@ -78,14 +79,14 @@ class PixelFactory:
         Returns:
             - None
         """
-        scaled_img = cv2.resize(img[1], [x,y])
-
         out_path = f"./outputs/{x}-{y}/"
         out_name = f"{os.path.basename(img[0])}".split(".")[0]
         print(f"Resizing: {out_path}{out_name}")
 
         if not os.path.exists(out_path):
             os.mkdir(out_path)
+
+        scaled_img = cv2.resize(img[1], [x,y])
 
         cv2.imwrite(out_path + out_name + ".png", scaled_img)
 
