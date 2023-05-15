@@ -567,10 +567,10 @@ const long rr1[] PROGMEM =
 0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x000000,0x352e29,0x322a26,0x797174,0x69635d,0x342c30,0x323231,0x323231,0x2f2723,0x2e2622,0x323231,0x696566,0x000000,0x000000,0x000000,0x000000
 };
 
-//const long bird[] = {Bird0, Bird1, Bird2, Bird3, Bird4};
-//const long pingu[] = {Pingu0, Pingu1, Pingu2, Pingu1, Pingu2, Pingu1, Pingu3, Pingu4};
-//const long pop_cat[] = {Pop0, Pop1};
-//const long rroll[] = {rr0, rr1, rr0, rr1, rr2};
+const long bird[] = {Bird0, Bird1, Bird2, Bird3, Bird4};
+const long pingu[] = {Pingu0, Pingu1, Pingu2, Pingu1, Pingu2, Pingu1, Pingu3, Pingu4};
+const long pop_cat[] = {Pop0, Pop1};
+const long rroll[] = {rr0, rr1};
 
 int num_sets = 4;
 int num_img[] = {5, 8, 2, 2};
@@ -608,68 +608,16 @@ void loop() {
          */
         switch(state) {
             case 0:
-                switch(c) {
-                    case 0:
-                        DrawOneFrame(Bird0);
-                        break;
-                    case 1:
-                        DrawOneFrame(Bird1);
-                        break;
-                    case 2:
-                        DrawOneFrame(Bird2);
-                        break;
-                    case 3:
-                        DrawOneFrame(Bird3);
-                        break;
-                    case 4:
-                        DrawOneFrame(Bird4);
-                        break;
-                }
+                DrawOneFrame(bird[c]);
                 break;
             case 1:
-                switch(c) {
-                    case 0:
-                        DrawOneFrame(Pingu0);
-                        break;
-                    case 1:
-                    case 3:
-                    case 5:
-                        DrawOneFrame(Pingu1);
-                        break;
-                    case 2:
-                    case 4:
-                        DrawOneFrame(Pingu2);
-                        break;
-                    case 6:
-                        DrawOneFrame(Pingu3);
-                        break;
-                    case 7:
-                        DrawOneFrame(Pingu4);
-                        break;
-                }
+                DrawOneFrame(pingu[c]);
                 break;
             case 2:
-                switch(c) {
-                    case 0:
-                        DrawOneFrame(Pop0);
-                        break;
-                    case 1:
-                        DrawOneFrame(Pop1);
-                        break;
-                }
+                DrawOneFrame(pop_cat[c]);
                 break;
             case 3:
-                switch(c) {
-                    case 0:
-                        DrawOneFrame(rr0);
-                        break;
-                    case 1:
-                        DrawOneFrame(rr1);
-                        break;
-//                    case 2:
-//                        DrawOneFrame(rr2);
-//                        break;
-                }
+                DrawOneFrame(rroll[c]);
                 break;
         }
         
