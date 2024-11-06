@@ -64,10 +64,10 @@ class PixelFactory:
 
         # Generate Resizes
         for img in img_arr:
-            # self.generate_resize(16,16,img)
+            self.generate_resize(16,16,img)
             self.generate_resize(22,22,img)
-            # self.generate_resize(32,32,img)
-            # self.generate_resize(64,64,img)
+            self.generate_resize(32,32,img)
+            self.generate_resize(64,64,img)
 
     def generate_resize(self, x: int, y: int, img):
         """ Resizes the input image to the input dimensions, then produces a csv of hex colors
