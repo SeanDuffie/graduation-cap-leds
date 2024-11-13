@@ -4,10 +4,18 @@
  * @author      Sean Duffie
  * @link        https://github.com/SeanDuffie/graduation-cap-leds
  * 
- * The purpose of this project is to create a 
+ * The purpose of this project is to program a microcontroller so that it can receive, store, and
+ * display images scaled to different resolutions on a 2D LED Matrix.
  */
 
 #include "FastLED.h"
+
+// How many LEDs are attached to the Arduino?
+#define WIDTH 16
+#define LENGTH 16
+#define NUM_LEDS (WIDTH * LENGTH)
+// const uint8_t LAST_VISIBLE_LED = NUM_LEDS-1;
+
 #include "Sequence.h"
 #include "led.h"
 #include "16.h"
@@ -30,13 +38,6 @@
 // Amount of time for each half-blink, in milliseconds
 #define BLINK_TIME 25
 uint8_t MULTIPLIER = 5;
-
-// How many LEDs are attached to the Arduino?
-#define WIDTH 16
-#define LENGTH 16
-#define NUM_LEDS (WIDTH * LENGTH)
-// const uint8_t LAST_VISIBLE_LED = NUM_LEDS-1;
-#include "WIDTH.h"
 
 CRGB leds_plus_safety_pixel[NUM_LEDS];
 CRGB* const leds( leds_plus_safety_pixel );
