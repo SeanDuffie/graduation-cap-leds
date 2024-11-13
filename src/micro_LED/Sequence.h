@@ -9,33 +9,46 @@
 
 class Sequence {
     public:
-        // Width of the LED Matrix
-        int dim_x = 16;
-        // Length of the LED Matrix
-        int dim_y = 16;
-        // Number of frames in the Sequence
-        int fcount = 1;
-        // Index of the current frame being displayed
-        int cur = 0;
-        //
-        long frames[fcount][dim_x * dim_y];
-        // Is it a 
+        Sequence();
+        Sequence(int dx, int dy);
 
         int getDelay();
         long* nextFrame();
+        void insertFrame();
 
-        // Default Constructor
-        Sequence()
+    private:
+        // Width of the LED Matrix
+        int dim_x;
+        // Length of the LED Matrix
+        int dim_y;
+        // Number of frames in the Sequence
+        int fcount;
+        // Index of the current frame being displayed
+        int cur;
+        // Container for frames to be displayed
+        // long frames[fcount][256];
+        std::vector<std::vector<long>> frames;
+
+        // Seconds per cycle or seconds per frame?
+        // int bpm;
 };
 
-Sequence::Sequence() {
+Sequence::Sequence() : dim_x(16), dim_y(16), fcount(0), cur(0) {
+    frames = {};
+}
 
+Sequence::Sequence(int dx, int dy) : dim_x(dx), dim_y(dy), fcount(0), cur(0) {
+    frames = {};
 }
 
 int Sequence::getDelay() {
-    if 
+    return 180;
 }
 
 long* Sequence::nextFrame() {
     return self.frames[self.cur++];
+}
+
+void Sequence::insertFrame() {
+
 }
