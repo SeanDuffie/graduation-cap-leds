@@ -1,3 +1,12 @@
+/**
+ * Project      graduation-cap-leds
+ * @file        micro_LED.ino
+ * @author      Sean Duffie
+ * @link        https://github.com/SeanDuffie/graduation-cap-leds
+ * 
+ * The purpose of this project is to create a 
+ */
+
 class Sequence {
     public:
         // Width of the LED Matrix
