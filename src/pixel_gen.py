@@ -79,12 +79,11 @@ class PixelFactory:
         Returns:
             - None
         """
-        out_path = f"./outputs/{x}-{y}/"
+        out_path = os.path.join(os.getcwd(), f"outputs\\{x}-{y}\\")
         out_name = f"{os.path.basename(img[0])}".split(".")[0]
         print(f"Resizing: {out_path}{out_name}")
 
-        if not os.path.exists(out_path):
-            os.mkdir(out_path)
+        os.makedirs(out_path, exist_ok=True)
 
         scaled_img = cv2.resize(img[1], [x,y])
 
