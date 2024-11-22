@@ -18,8 +18,23 @@
 
 #include "Sequence.h"
 #include "led.h"
-#include "16.h"
-// TODO: Add a conditional include for pixel array file
+switch(WIDTH)
+{
+case 16:
+    #include "16.h"
+    break;
+case 22:
+    #include "22.h"
+    break;
+// case 32:
+//     #include "32.h"
+// case 64:
+//     #include "64.h"
+//     break;
+
+default:
+    break;
+}
 
 #define DEBUG false
 
@@ -42,10 +57,21 @@ uint8_t MULTIPLIER = 5;
 CRGB leds_plus_safety_pixel[NUM_LEDS];
 CRGB* const leds( leds_plus_safety_pixel );
 
-long bird[][NUM_LEDS] = {Bird0, Bird1, Bird2, Bird3, Bird4};
-long pingu[] = {Pingu0, Pingu1, Pingu2, Pingu1, Pingu2, Pingu1, Pingu3, Pingu4};
-const long pop_cat[] = {Pop0, Pop1};
-const long rroll[] = {rr0, rr1};
+Sequence seq_bird(WIDTH, LENGTH);
+std::vector<std::vector<long>> bird = {Bird0, Bird1, Bird2, Bird3, Bird4};
+seq_bird.insertBatch(bird);
+
+Sequence seq_pingu(WIDTH, LENGTH);
+std::vector<std::vector<long>> pingu = {Pingu0, Pingu1, Pingu2, Pingu1, Pingu2, Pingu1, Pingu3, Pingu4};
+seq_pingu.insertBatch(pingu);
+
+Sequence seq_pop_cat(WIDTH, LENGTH);
+std::vector<std::vector<long>> pop_cat = {Pop0, Pop1};
+seq_pop_cat.insertBatch(pop_cat);
+
+Sequence seq_rroll(WIDTH, LENGTH);
+std::vector<std::vector<long>> rroll = {rr0, rr1};
+seq_rroll.insertBatch(rroll);
 
 int num_sets = 4;
 int num_img[] = {5, 8, 2, 2};
@@ -77,17 +103,8 @@ void setup() {
 }
 
 void loop() {
-    #ifdef DEBUG
-    Serial.println("Loop started!");
-    #endif
     int c = 0;
 
-    while (c < num_img[state]) {
-        /** Draw the current frame
-         *   
-         *  state - determines the image set
-         *  c - determines the frame in the current set 
-         */
         switch(state) {
             case 0:
                 DrawOneFrame(bird[c]);
